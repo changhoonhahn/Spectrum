@@ -190,8 +190,8 @@ class Data(object):
         else: 
             raise NameError('not yet coded') 
             
-        # data columns, format and header are predetermined. Consult
-        # corrections.corrections and util.catalog for specifics
+        # data columns, format and header are determined in util.catalog
+        # and are catalog specific
         data_fmt = self.datacols_fmt()
         header_str = self.datacols_header()
         

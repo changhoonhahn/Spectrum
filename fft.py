@@ -26,7 +26,7 @@ class Fft(object):
                     'P0': 20000, #P0 
                     'Lbox': 3600.0, 
                     'Ngrid':360, 
-                    'quad': False
+                    'ell': 0 
                     }
 
         self.cat_corr = cat_corr.copy()
@@ -39,7 +39,7 @@ class Fft(object):
         """ FFT data file name 
         """
 
-        corrdict = (self.cat_corr)['correction']
+        #corrdict = (self.cat_corr)['correction']
         specdict = (self.cat_corr)['spec'] 
     
         fft_dir = direc('fft', self.cat_corr)
@@ -56,15 +56,13 @@ class Fft(object):
         if specdict['ell'] != 0: 
             fft_str += 'Q_'
     
-        fft_corr_str = ''
-        if (corrdict['name'].lower() in ('floriansn', 'hectorsn')) & (self.type != 'random'):
-            fft_corr_str = ''.join(['.', corrdict['name'].lower()])
+        #if (corrdict['name'].lower() in ('floriansn', 'hectorsn')) & (self.type != 'random'):
+        #    fft_corr_str = ''.join(['.', corrdict['name'].lower()])
 
         # FFTs from data file 
         fft_file = ''.join([
             fft_dir, 
             fft_str, (self.data_file).rsplit('/')[-1], 
-            fft_corr_str,
             '.grid', str(specdict['Ngrid']), 
             '.P0', str(specdict['P0']), 
             '.box', str(specdict['Lbox'])
@@ -75,9 +73,6 @@ class Fft(object):
     def build(self): 
         """ Run FFT FORTRAN code to calculate FFT of data
         """
-        
-        catdict = (self.cat_corr)['catalog']
-        corrdict = (self.cat_corr)['correction']
         specdict = (self.cat_corr)['spec'] 
         
         if not os.path.isfile(self.data_file):
@@ -94,10 +89,10 @@ class Fft(object):
         #else:  
         #    fft_type = 'quad_fft'
     
-        if specdict['ell'] == 0: 
-            fft_type = 'fft'
-        else: 
-            fft_type = 'quad_fft'       # (outdated naming convention but too lazy to fully change)
+        #if specdict['ell'] == 0: 
+        fft_type = 'fft'
+        #else: 
+        #    fft_type = 'quad_fft'       # (outdated naming convention but too lazy to fully change)
 
         codeclass = Fcode(fft_type, self.cat_corr) 
         fftcode = codeclass.code

@@ -7,7 +7,6 @@ Spectrum class of FiberCollisions project
 import numpy as np
 import os.path
 import subprocess
-import cosmolopy as cosmos
 
 from rand import Random
 from corrdata import CorrData 
@@ -39,9 +38,11 @@ class Spec(object):
             self.type = spectype
 
         if 'spec' not in cat_corr.keys(): 
+            if self.type == 'bk': 
+                ell = 2         # this is a hack so that the FFT is from the quadrupole FFT
 
             if ell is None: 
-                raise ValueError
+                raise ValueError("Specify ell (monopole: 0, quadrupole: 2, hexadecapole: 4)")
 
             # default spectrum parameters
             cat_corr['spec'] = {
@@ -57,7 +58,9 @@ class Spec(object):
         else: 
 
             if 'ell' not in cat_corr['spec'].keys():
-                raise ValueError
+                raise ValueError("Specify ell (monopole: 0, quadrupole: 2, hexadecapole: 4) in catcorr dictionary")
+            elif spec.type == 'bk': 
+                cat_corr['spec']['ell'] = 2
 
             if ell is not None: 
                 if ell != cat_corr['spec']['ell']: 
@@ -69,28 +72,37 @@ class Spec(object):
         self.kwargs = kwargs
 
         self.file_name = self.file()
+            
+        if self.type == 'bk':
+            self.scale = np.float(self.cat_corr['spec']['Lbox'])
+            k_fund = (2.0*np.pi)/self.scale        # k fundamental 
+            self.k_fund = k_fund 
     
     def read(self): 
         """ Read power/bispectrum of simulated/observed data catalog
         """
-    
-        if self.ell == 0:   # monopole
+        if self.type == 'pk':   # power spectrum
+            if self.ell == 0:   # monopole
+                    
+                col_index = [0, 1]
+                data_cols = ['k', 'p0k']
+
+            elif self.ell == 2:     # quadrupoel
                 
-            col_index = [0, 1]
-            data_cols = ['k', 'p0k']
+                col_index = [0, 2, 1, 3]
+                data_cols = ['k', 'p2k', 'p0k', 'p4k']
 
-        elif self.ell == 2:     # quadrupoel
-            
-            col_index = [0, 2, 1, 3]
-            data_cols = ['k', 'p2k', 'p0k', 'p4k']
+            elif self.ell == 4:     # hexadecapole
+                
+                col_index = [0, 3, 1, 2]
+                data_cols = ['k', 'p4k', 'p0k', 'p2k']
 
-        elif self.ell == 4:     # hexadecapole
-            
-            col_index = [0, 3, 1, 2]
-            data_cols = ['k', 'p4k', 'p0k', 'p2k']
-
-        else: 
-            raise NotImplementedError()
+            else: 
+                raise NotImplementedError()
+        else:                   # bispectrum
+            # bispectrum v5 columns k1, k2, k3, P0(k1), P0(k2), P0(k3), B0, Q0, P2(k1), P2(k2), P2(k3), B2, Q2, dum, dum 
+            col_index = [0, 1, 2, 3, 4, 5, 6, 7]
+            data_cols = ['k1', 'k2', 'k3', 'p0k1', 'p0k2', 'p0k3', 'bk', 'qk']
 
         spec_data = np.loadtxt(
                     self.file_name, 
@@ -101,14 +113,22 @@ class Spec(object):
         for i_col, col in enumerate(data_cols): 
             setattr(self, col, spec_data[i_col])
 
+        if self.type == 'bk': 
+            self.k1 *= self.k_fund          # k1 * k_fundamental to get h/Mpc
+            self.k2 *= self.k_fund 
+            self.k3 *= self.k_fund 
+            
+            # some extra useful values
+            self.i_triangle = range(len(self.k1))               # triangle ID
+            self.avgk = (self.k1 + self.k2 + self.k3)/3.0       # average k
+            self.kmax = np.amax(np.vstack([self.k1, self.k2, self.k3]), axis=0) # max(k1,k2,k3)
+
         return None 
 
     def file(self):
         """ power/bispectrum file 
         """
 
-        catdict = (self.cat_corr)['catalog']
-        corrdict = (self.cat_corr)['correction']
         specdict = (self.cat_corr)['spec']
 
         # powerspectrum or bispectrum 
@@ -122,7 +142,7 @@ class Spec(object):
         
         #if specdict['quad']:          
         #    spec_str += 'Q_'
-        if self.ell != 0: 
+        if (self.type == 'pk') and (self.ell != 0): 
             spec_str += 'Q_'
 
         gal_data = CorrData(self.cat_corr, **self.kwargs)
@@ -140,18 +160,15 @@ class Spec(object):
                 '.P0', str(specdict['P0']), 
                 '.box', str(specdict['Lbox'])
                 ])
-
         elif self.type == 'bk': 
-            # (hardcoded)
-            spectrum_str = ''.join([
+            specparam_str = ''.join([
                 '.grid', str(specdict['Ngrid']), 
                 '.nmax40.ncut3.s3', 
                 '.P0', str(specdict['P0']), 
                 '.box', str(specdict['Lbox'])
                 ])
-
         else: 
-            raise NotImplementedError()
+            raise NotImplementedError
     
         file_name = ''.join([
             spec_dir, 
@@ -170,10 +187,6 @@ class Spec(object):
             bool_clobber = False
         else: 
             bool_clobber = self.kwargs['clobber']
-        
-        catdict = (self.cat_corr)['catalog']
-        corrdict = (self.cat_corr)['correction']
-        specdict = (self.cat_corr)['spec'] 
 
         #if corrdict['name'] == 'fourier_tophat':
         #    if self.ell != 2: 
@@ -188,16 +201,12 @@ class Spec(object):
         #    fourier_tophat_Pk(self.cat_corr, self.file_name, tr_gal.file_name)
         #    return None
 
-        spec_type = self.type
-
-        codeclass = Fcode(spec_type, self.cat_corr) 
+        codeclass = Fcode(self.type, self.cat_corr) 
         spec_code = codeclass.code
         spec_exe = codeclass.fexe()
-        print spec_exe
         
         # code and exe modification time 
         speccode_t_mod, specexe_t_mod = codeclass.mod_time()
-        print speccode_t_mod, specexe_t_mod
 
         if specexe_t_mod <= speccode_t_mod: 
             codeclass.compile()
@@ -240,51 +249,7 @@ class Spec(object):
         return None
 
 if __name__=='__main__':
-    cat_corr = {
-            'catalog': {'name': 'nseries', 'n_mock': 1}, 
-            'correction': {'name': 'fourier_tophat', 'fs': 1.0, 'rc': 0.43, 'k_fit': 0.7, 'k_fixed': 0.84}
-            }
-            #'correction': {'name': 'dlospeak', 'fit': 'gauss', 'sigma': 3.9, 'fpeak': 0.68} 
-            #}
-    spectrum = Spec('pk', cat_corr, ell=2, Ngrid=960)
+    cat_corr = {'catalog': {'name': 'nseries', 'n_mock': 1}}
+    spectrum = Spec('bk', cat_corr, Ngrid=360)
     print spectrum.file()
     print spectrum.build()
-
-"""
-def build_fibcol_bispec(**cat_corr): 
-    '''
-    Given catalog_correction dictionary, construct bispec file 
-    '''
-    catalog = cat_corr['catalog']
-    correction = cat_corr['correction']
-    spec = cat_corr['spec'] 
-    
-    # data file name 
-    data = fc_data.galaxy_data('data', readdata=False, **cat_corr) 
-
-    # FFt file names 
-    fft_file = get_fibcol_fft_file('data', **cat_corr) 
-    fft_rand_file = get_fibcol_fft_file('random', **cat_corr) 
-
-    bispec = fc_spec.spec('bispec', **cat_corr) 
-    bispec_file = bispec.file_name 
-
-    bispec_code = fc_util.fortran_code('bispec', **cat_corr) 
-    bispec_exe = fc_util.fortran_code2exe(power_code)
-    
-    # code and exe modification time 
-    power_code_mod_time = time.ctime(os.path.getmtime(power_code))
-    power_exe_mod_time = time.ctime(os.path.getmtime(power_exe))
-
-    # if code was changed since exe file was last compiled then 
-    # compile power code 
-    if (power_exe_mod_time < power_code_mod_time) or (os.path.isfile(bispec_exe) == False): 
-        fc_util.compile_fortran_code(bispec_code) 
-
-    if catalog['name'].lower() == 'lasdamasgeo': 
-        bispec_cmd = ' '.join([bispec_exe, '2', fft_rand_file, fft_file, bispec_file]) 
-        print power_cmd
-        subprocess.call(power_cmd.split()) 
-            
-    return power_file  
-"""
