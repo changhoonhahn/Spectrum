@@ -11,7 +11,7 @@ import subprocess
 import cosmolopy as cosmos
 
 from corrdata import CorrData 
-from random import Random
+from rand import Random
 from util.direc import direc
 from util.fortran import Fcode
 

@@ -9,11 +9,12 @@ import os.path
 import subprocess
 import cosmolopy as cosmos
 
-from data import Data 
+from rand import Random
+from corrdata import CorrData 
+
 from fft import Fft
 from util.direc import direc
 from util.fortran import Fcode
-from fourier_corr.pk_corr import fourier_tophat_Pk
 
 # Classes ------------------------------------------------------------
 class Spec(object): 
@@ -124,11 +125,11 @@ class Spec(object):
         if self.ell != 0: 
             spec_str += 'Q_'
 
-        gal_data = Data('data', self.cat_corr, **self.kwargs)
+        gal_data = CorrData(self.cat_corr, **self.kwargs)
         self.data_file = gal_data.file_name
         gal_file = (gal_data.file_name).split('/')[-1]
 
-        rand_data = Data('random', self.cat_corr, **self.kwargs)
+        rand_data = Random(self.cat_corr, **self.kwargs)
         self.random_file = rand_data.file_name
 
         spec_dir = direc('spec', self.cat_corr)
@@ -174,29 +175,31 @@ class Spec(object):
         corrdict = (self.cat_corr)['correction']
         specdict = (self.cat_corr)['spec'] 
 
-        if corrdict['name'] == 'fourier_tophat':
-            if self.ell != 2: 
-                raise ValueError
+        #if corrdict['name'] == 'fourier_tophat':
+        #    if self.ell != 2: 
+        #        raise ValueError
 
-            true_cat_corr = {
-                    'catalog': catdict, 
-                    'correction': {'name': 'true'}
-                    }
-            tr_gal = Data('data', true_cat_corr)
+        #    true_cat_corr = {
+        #            'catalog': catdict, 
+        #            'correction': {'name': 'true'}
+        #            }
+        #    tr_gal = Data('data', true_cat_corr)
 
-            fourier_tophat_Pk(self.cat_corr, self.file_name, tr_gal.file_name)
-            return None
+        #    fourier_tophat_Pk(self.cat_corr, self.file_name, tr_gal.file_name)
+        #    return None
 
         spec_type = self.type
 
         codeclass = Fcode(spec_type, self.cat_corr) 
         spec_code = codeclass.code
         spec_exe = codeclass.fexe()
+        print spec_exe
         
         # code and exe modification time 
         speccode_t_mod, specexe_t_mod = codeclass.mod_time()
+        print speccode_t_mod, specexe_t_mod
 
-        if specexe_t_mod < speccode_t_mod: 
+        if specexe_t_mod <= speccode_t_mod: 
             codeclass.compile()
 
         # fft files 

@@ -1,10 +1,10 @@
 '''
 
-Multiprocessing code to calculate corrected data 
-in parallel
+Multiprocessing code to calculate corrected data or 
+power/bispectrum in parallel!
 
 '''
-from data import Data 
+from corrdata import CorrData 
 from spec import Spec
 from interruptible_pool import InterruptiblePool as Pewl
 
@@ -24,7 +24,7 @@ def build_corrdata_wrapper(params):
         kwargs = params[1]
     kwargs['clobber'] = True
     
-    dataclass = Data('data', cat_corr, **kwargs) 
+    dataclass = CorrData(cat_corr, **kwargs) 
     print dataclass.file_name
     dataclass.build() 
 
@@ -129,10 +129,10 @@ def build_multipro(type, catalog_name, corr_name, n_mocks, Nthreads=8, ell=2, Ng
     return None 
 
 if __name__=="__main__":
-    #build_multipro('spec', 'nseries', 'true', 1, Nthreads=1, clobber=True, quad=True, Ngrid=960)
+    build_multipro('spec', 'nseries', 'true', 1, Nthreads=1, clobber=True, ell=0, Ngrid=360)
     #build_multipro('spec', 'nseries', 'true', range(21, 85), Nthreads=1, clobber=True, quad=True, Ngrid=960)
     #build_multipro('spec', 'nseries', 'upweight', range(21, 85), Nthreads=1, clobber=True, quad=True, Ngrid=960)
-    build_multipro('spec', 'nseries', 'fourier_tophat', range(21,41), Nthreads=5, ell=2, Ngrid=960)
+    #build_multipro('spec', 'nseries', 'fourier_tophat', range(21,41), Nthreads=5, ell=2, Ngrid=960)
     
     #for f_peakcorr in np.arange(0.0, 1.1, 0.1): 
     #    for type in ['data', 'spec']:

@@ -35,8 +35,6 @@ class Data(object):
         self.cat_corr = cat_corr.copy()    
         self.kwargs = kwargs    
 
-        self.file_name = None
-
         # catalog 
         self.catclass = Catalog(self.cat_corr)
         self.corr_str = None
@@ -51,12 +49,11 @@ class Data(object):
 
         self.cosmos = None   # cosmology of catalog 
 
+        self.file_name = self.file()
+
     def read(self): 
         """ Read galaxy/random catalog data 
         """
-        if self.file_name is None: 
-            self.file_name = self.file()
-        
         data_cols = self.datacolumns()
         self.datacolumns = self.datacolumns()
     
@@ -86,7 +83,7 @@ class Data(object):
 
         catalog = (self.cat_corr)['catalog']
 
-        output_file = self.file()
+        output_file = self.file_name
         
         if catalog['name'].lower() == 'nseries':       # N Series
             
@@ -225,14 +222,11 @@ class Data(object):
             cosmos_str = '.fidcosmo'
         file_list.insert( -1, cosmos_str )
 
-        # need to account for the fact that the default 
-
         # correction string 
-        if self.corr_str is not None: 
-            file_list.insert( -1, self.corr_str )
-
+        if self.corr_str is None: 
             return ''.join(file_list)
         else: 
+            file_list.insert( -1, self.corr_str )
             return ''.join(file_list)
 
     def cosmo(self): 

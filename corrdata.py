@@ -3,6 +3,7 @@
 Code to handle corrected galaxy data 
 
 '''
+import warnings
 # --- Data class ---
 from data import Data
 # --- Corrections ---
@@ -33,8 +34,6 @@ class CorrData(Data):
             Catalog correction Dictionary 
         
         '''
-        super(CorrData, self).__init__(cat_corr, **kwargs)
-
         # correction class dictionary 
         corrclass_dict = None
         #'true': TrueCorr,
@@ -59,7 +58,9 @@ class CorrData(Data):
             self.corrclass = corrclass_dict[corr_name](cat_corr, **kwargs)
         else: 
             pass
-
+        
+        super(CorrData, self).__init__(cat_corr, **kwargs)
+        
     def build(self): 
         '''
         Calculate galaxy catalog
@@ -76,9 +77,9 @@ class CorrData(Data):
         """ Name of ASCII file of Data/Random catalogy
         """
         if self.corr_str is None: 
-            raise ValueError("Correction specifier is None")
+            warnings.warn("Correction specifier is None so the default will be calculated")
 
-        super(CorrData, self).build()
+        return super(CorrData, self).file()
         
 if __name__ == '__main__':
 
