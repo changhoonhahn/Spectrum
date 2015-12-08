@@ -8,46 +8,9 @@ from corrdata import CorrData
 from spec import Spec
 from interruptible_pool import InterruptiblePool as Pewl
 
-# --- Wrappers ---
-def build_corrdata_wrapper(params): 
-    ''' Wrapper for calculating corrected data   
-
-    Parameters
-    ----------
-    params : [ cat_corr, kwargs ] 
-
-    '''
-
-    cat_corr = params[0]
-    kwargs = {} 
-    if len(params) > 1: 
-        kwargs = params[1]
-    kwargs['clobber'] = True
-    
-    dataclass = CorrData(cat_corr, **kwargs) 
-    print dataclass.file_name
-    dataclass.build() 
-
-    return None
-
-def build_spec_wrapper(params): 
-    """ Wrapper for calculating power/bispectrum
-    """
-    cat_corr = params[0]
-    ell = params[1]
-    kwargs = {} 
-    if len(params) > 2: 
-        kwargs = params[2]
-
-    spectrum = Spec('pk', cat_corr, **kwargs)
-    print spectrum.file()
-    spectrum.build()
-
-    return None 
-
-# --- Multiprocessing --- 
 def build_multipro(type, catalog_name, corr_name, n_mocks, Nthreads=8, ell=2, Ngrid=360, **kwargs): 
-    """ Calculate dLOS for catalogs in parallel using interruptible
+    ''' 
+    Calculate dLOS for catalogs in parallel using interruptible
     pool, which is multiprocessing pool that allows for interrputions
 
     Parameters
@@ -57,7 +20,7 @@ def build_multipro(type, catalog_name, corr_name, n_mocks, Nthreads=8, ell=2, Ng
     n_mocks : Number of mock catalogs to calculate 
     Nthreads : Number of CPUs to use 
 
-    """
+    '''
     
     if isinstance(n_mocks, list): 
         n_mock_list = n_mocks
@@ -94,18 +57,27 @@ def build_multipro(type, catalog_name, corr_name, n_mocks, Nthreads=8, ell=2, Ng
                 corrdict['k_fit'] = 0.7 
                 corrdict['k_fixed'] = 0.84
     
-    arglist = [ [{
-                'catalog': {'name': catalog_name, 'n_mock': i_mock}, 
-                'correction': corrdict, 
-                'spec': {
-                    'P0': 20000, #P0 
-                    'Lbox': 3600, 
-                    'Ngrid': Ngrid, 
-                    'ell': ell 
-                    }
+    if type == 'bk':
+        arglist = [ 
+                [{ 
+                    'catalog': {'name': catalog_name, 'n_mock': i_mock}, 
+                    'spec': {'P0': 20000, 'Lbox': 3600, 'Ngrid': Ngrid} 
+                    }, kwargs]
+                for i_mock in n_mock_list]
+    else:
+        arglist = [ [{
+                    'catalog': {'name': catalog_name, 'n_mock': i_mock}, 
+                    'correction': corrdict, 
+                    'spec': {
+                        'P0': 20000, #P0 
+                        'Lbox': 3600, 
+                        'Ngrid': Ngrid, 
+                        'ell': ell 
+                        }
 
-                }, ell, kwargs]
-            for i_mock in n_mock_list]
+                    }, ell, kwargs]
+                for i_mock in n_mock_list
+                ]
     
     if Nthreads > 1: 
         pool = Pewl(processes=Nthreads)
@@ -113,8 +85,10 @@ def build_multipro(type, catalog_name, corr_name, n_mocks, Nthreads=8, ell=2, Ng
     
         if type == 'data': 
             mapfn( build_corrdata_wrapper, [arg for arg in arglist])
-        elif type == 'spec': 
-            mapfn( build_spec_wrapper, [arg for arg in arglist])
+        elif type == 'pk': 
+            mapfn( build_pk_wrapper, [arg for arg in arglist])
+        elif type == 'bk': 
+            mapfn( build_bk_wrapper, [arg for arg in arglist])
 
         pool.close()
         pool.terminate()
@@ -123,13 +97,67 @@ def build_multipro(type, catalog_name, corr_name, n_mocks, Nthreads=8, ell=2, Ng
         for arg in arglist: 
             if type == 'data': 
                 build_corrdata_wrapper(arg)
-            elif type == 'spec': 
-                build_spec_wrapper(arg)
+            elif type == 'pk': 
+                build_pk_wrapper(arg)
+            elif type == 'bk': 
+                build_bk_wrapper(arg)
 
     return None 
 
+# --- Wrappers ---
+def build_corrdata_wrapper(params): 
+    ''' Wrapper for calculating corrected data   
+
+    Parameters
+    ----------
+    params : [ cat_corr, kwargs ] 
+
+    '''
+
+    cat_corr = params[0]
+    kwargs = {} 
+    if len(params) > 1: 
+        kwargs = params[1]
+    kwargs['clobber'] = True
+    
+    dataclass = CorrData(cat_corr, **kwargs) 
+    print dataclass.file_name
+    dataclass.build() 
+
+    return None
+
+def build_pk_wrapper(params): 
+    """ Wrapper for calculating power/bispectrum
+    """
+    cat_corr = params[0]
+    ell = params[1]
+    kwargs = {} 
+    if len(params) > 2: 
+        kwargs = params[2]
+
+    spectrum = Spec('pk', cat_corr, **kwargs)
+    print spectrum.file()
+    spectrum.build()
+
+    return None 
+
+def build_bk_wrapper(params): 
+    """ Wrapper for calculating power/bispectrum
+    """
+    cat_corr = params[0]
+    kwargs = {} 
+    if len(params) > 2: 
+        kwargs = params[1]
+
+    spectrum = Spec('bk', cat_corr, **kwargs)
+    print spectrum.file()
+    spectrum.build()
+
+    return None 
+
+# --- Multiprocessing --- 
 if __name__=="__main__":
-    build_multipro('spec', 'nseries', 'true', 1, Nthreads=1, clobber=True, ell=0, Ngrid=360)
+    build_multipro('bk', 'nseries', 'true', range(2, 85), Nthreads=1, clobber=True, Ngrid=360)
     #build_multipro('spec', 'nseries', 'true', range(21, 85), Nthreads=1, clobber=True, quad=True, Ngrid=960)
     #build_multipro('spec', 'nseries', 'upweight', range(21, 85), Nthreads=1, clobber=True, quad=True, Ngrid=960)
     #build_multipro('spec', 'nseries', 'fourier_tophat', range(21,41), Nthreads=5, ell=2, Ngrid=960)

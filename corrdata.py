@@ -35,7 +35,10 @@ class CorrData(Data):
         
         '''
         # correction class dictionary 
-        corrclass_dict = None
+        try: 
+            corrclass_dict.keys()
+        except UnboundLocalError:
+            corrclass_dict = None 
         #'true': TrueCorr,
         #'upweight': UpweightCorr, 
         #'photoz': PhotozCorr,
@@ -49,15 +52,15 @@ class CorrData(Data):
         #'dlospeak.peakonly': DlospeakPeakonlyCorr,
         #'fourier_tophat': FourierTophatCorr
         #}
-        
-        if corrclass_dict is not None: 
-            corr_name = (self.cat_corr['correction'])['name']
+       
+        if corrclass_dict is not None:
+            corr_name = cat_corr['correction']['name']
             if corr_name not in corrclass_dict.keys():
-                raise NameError()
+                cat_corr['correction'] = {'name': 'default'}
 
             self.corrclass = corrclass_dict[corr_name](cat_corr, **kwargs)
         else: 
-            pass
+            cat_corr['correction'] = {'name': 'default'}
         
         super(CorrData, self).__init__(cat_corr, **kwargs)
         

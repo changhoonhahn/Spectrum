@@ -57,10 +57,10 @@ class Spec(object):
                 cat_corr['spec']['Ngrid'] = kwargs.pop('Ngrid')
         else: 
 
-            if 'ell' not in cat_corr['spec'].keys():
-                raise ValueError("Specify ell (monopole: 0, quadrupole: 2, hexadecapole: 4) in catcorr dictionary")
-            elif spec.type == 'bk': 
+            if self.type == 'bk': 
                 cat_corr['spec']['ell'] = 2
+            elif 'ell' not in cat_corr['spec'].keys():
+                raise ValueError("Specify ell (monopole: 0, quadrupole: 2, hexadecapole: 4) in catcorr dictionary")
 
             if ell is not None: 
                 if ell != cat_corr['spec']['ell']: 
