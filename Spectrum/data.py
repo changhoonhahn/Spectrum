@@ -53,7 +53,7 @@ class Data(object):
         """ Read galaxy/random catalog data 
         """
         data_cols = self.datacolumns()
-        self.datacolumns = self.datacolumns()
+        self.data_columns = self.datacolumns()
     
         datah = np.loadtxt(
                 self.file_name, 
