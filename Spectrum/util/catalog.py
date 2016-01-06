@@ -12,7 +12,7 @@ class Catalog(object):
         self.cat_corr = cat_corr.copy()
         self.catalog_name = (cat_corr['catalog'])['name'].lower()
 
-        if self.catalog_name in ('nseries'): 
+        if self.catalog_name in ('nseries', 'qpm'): 
             self.cat_col_dict_key = self.catalog_name
         elif 'cmass' in self.catalog_name: 
             self.cat_col_dict_key = 'cmass' 
@@ -62,7 +62,7 @@ class Catalog(object):
         elif self.catalog_name == 'qpm':            # QPM
 
             data_dir = '/mount/riachuelo1/hahn/data/QPM/dr12d/'
-            file_beg = ''.join(['a0.6452_', str("%04d" % catalog['n_mock']), '.dr12d_cmass_ngc.vetoed'])
+            file_beg = ''.join(['a0.6452_', str("%04d" % cat['n_mock']), '.dr12d_cmass_ngc.vetoed'])
             file_end = '.dat'
 
         return [data_dir, file_beg, file_end]
