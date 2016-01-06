@@ -24,7 +24,7 @@ class Fft(object):
             # default spectrum parameters
             cat_corr['spec'] = {
                     'P0': 20000, #P0 
-                    'Lbox': 3600.0, 
+                    'Lbox': 3600, 
                     'Ngrid':360, 
                     'ell': 0 
                     }
@@ -65,7 +65,7 @@ class Fft(object):
             fft_str, (self.data_file).rsplit('/')[-1], 
             '.grid', str(specdict['Ngrid']), 
             '.P0', str(specdict['P0']), 
-            '.box', str(specdict['Lbox'])
+            '.box', str(int(specdict['Lbox']))
             ])
 
         return fft_file  
@@ -170,14 +170,13 @@ class Fft(object):
         return None 
 
 if __name__=='__main__': 
-    cat_corr = {'catalog': {'name': 'nseries', 'n_mock': 1}, 'correction': {'name': 'upweight'}}
+    cat_corr = {'catalog': {'name': 'qpm', 'n_mock': 1}, 'correction': {'name': 'true'}}
     for DorR in ['data', 'random']:
         fftee = Fft(DorR, cat_corr, clobber=True)
         print fftee.build()
 
-"""
+    """
         # Quad FFT argument sequence (SUBJECT TO CHANGE) 
-
             # determine "idata"
             if catalog['name'].lower() in ('lasdamasgeo', 'ldgdownnz'): 
                 idata = 2
@@ -226,4 +225,4 @@ if __name__=='__main__':
                     print fft_file, " already exists" 
 
             print 'Constructing ', 
-"""
+    """

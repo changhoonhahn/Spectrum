@@ -125,7 +125,7 @@ class Data(object):
             orig_data = np.loadtxt(orig_file) 
 
             orig_info_file = orig_file+'.info'
-            orig_info = np.loadtxt(orig_true_info_file)    # gal_id, comp, z_real, z_red, mass_halo, flag_sta, id_halo
+            orig_info = np.loadtxt(orig_info_file)    # gal_id, comp, z_real, z_red, mass_halo, flag_sta, id_halo
         
             # consistency issue with #46
             if catalog['n_mock'] in (46, 52, 53, 54, 56, 61, 707, 756, 794, 819, 831, 835, 838): 

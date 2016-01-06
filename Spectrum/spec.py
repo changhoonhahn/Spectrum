@@ -246,8 +246,8 @@ class Spec(object):
         return None
 
 if __name__=='__main__':
-    cat_corr = {'catalog': {'name': 'nseries', 'n_mock': 1}}
-    #spectrum = Spec('pk', cat_corr, ell=0, Ngrid=360)
-    spectrum = Spec('bk', cat_corr, Ngrid=360)
+    cat_corr = {'catalog': {'name': 'qpm', 'n_mock': 1}}
+    spectrum = Spec('pk', cat_corr, ell=0, Ngrid=360)
+    #spectrum = Spec('bk', cat_corr, Ngrid=360)
     print spectrum.file()
     print spectrum.build()

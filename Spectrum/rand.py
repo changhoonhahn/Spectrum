@@ -65,9 +65,13 @@ class Random(Data):
             else: 
                 raise NotImplementedError()
 
-        elif cat_name == 'nseries':   # Nseries
+        elif cat_name == 'nseries':     # Nseries
 
             file_name = 'Nseries_cutsky_randoms_50x_redshifts_comp.dat'
+
+        elif cat_name == 'qpm':         # QPM 
+
+            file_name = 'a0.6452_rand50x.dr12d_cmass_ngc.vetoed.dat'
 
         else: 
             raise NotImplementedError()
@@ -96,6 +100,22 @@ class Random(Data):
             header_str = 'Columns : ra, dec, z, comp'
             data_list = [ra, dec, z, comp]
             data_fmt=['%10.5f', '%10.5f', '%10.5f', '%10.5f']
+
+        elif cat_name == 'qpm':             # QPM -----------------------------------
+
+            data_dir = '/mount/riachuelo2/rs123/BOSS/QPM/cmass/mocks/dr12d/ngc/randoms/'
+            ra, dec, z = np.loadtxt(
+                    data_dir+'a0.6452_rand50x.dr12d_cmass_ngc.rdz', unpack=True, usecols=[0,1,2])   # ra, dec, z, wfkp
+            comp = np.loadtxt(
+                    data_dir+'a0.6452_rand50x.dr12d_cmass_ngc.rdz.info', unpack=True, skiprows=3, usecols=[1])   # galid, comp?
+            veto = np.loadtxt(
+                    data_dir+'a0.6452_rand50x.dr12d_cmass_ngc.veto')       # veto  
+
+            vetomask = np.where(veto == 0)
+
+            header_str = 'Columns : ra, dec, z, comp'
+            data_list = [ra[vetomask], dec[vetomask], z[vetomask], comp[vetomask]]
+            data_fmt=['%10.5f', '%10.5f', '%10.5f', '%10.5f'] 
 
         elif 'cmass' in cat_name:          # CMASS -------------------------------- 
 
@@ -199,6 +219,8 @@ class Random(Data):
 
         if cat_name == 'nseries':
             data_cols = ['ra', 'dec', 'z', 'comp']
+        elif cat_name == 'qpm': 
+            data_cols = ['ra', 'dec', 'z', 'comp']
         elif cat_name == 'cmass': 
             data_cols = ['ra', 'dec', 'z', 'nbar', 'comp']
 
@@ -211,6 +233,8 @@ class Random(Data):
         cat_name = ((self.cat_corr)['catalog'])['name'].lower()
 
         if cat_name == 'nseries':
+            data_fmt=['%10.5f', '%10.5f', '%10.5f', '%10.5f']
+        elif cat_name == 'qpm':
             data_fmt=['%10.5f', '%10.5f', '%10.5f', '%10.5f']
         elif cat_name == 'cmass': 
             data_fmt=['%10.5f', '%10.5f', '%10.5f', '%.5e', '%10.5f']
@@ -225,7 +249,15 @@ class Random(Data):
 
         if cat_name == 'nseries':
             hdr_str = 'Columns : ra, dec, z, comp'
+        elif cat_name == 'qpm':
+            hdr_str = 'Columns : ra, dec, z, comp'
         elif cat_name == 'cmass': 
             hdr_str = 'Columns : ra, dec, z, nbar, comp'
 
         return hdr_str
+
+if __name__=="__main__":
+    cat_corr = {'catalog': {'name': 'qpm'}, 'correction': {'name': 'true'}}
+    rand_class = Random(cat_corr)
+    print rand_class.file()
+    rand_class.build()
