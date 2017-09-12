@@ -9,10 +9,10 @@ import os.path
 class Fcode: 
 
     def __init__(self, type, cat_corr): 
-        """ Class to describe FORTRAN code for fiber collision corrected 
+        ''' Class to describe FORTRAN code for fiber collision corrected 
         powerspectrum calculations 
 
-        """
+        '''
         self.cat_corr = cat_corr.copy()
         self.type = type
     
@@ -21,10 +21,19 @@ class Fcode:
         specdict = cat_corr['spec']
         
         if type == 'fft':                   # fft code
-            if specdict['ell'] == 0: 
-                f_name = 'FFT_fkp.f'
-            else: 
-                f_name = 'FFT_fkp_quad.f'
+            multipole_str = ''
+            if specdict['ell'] != 0: 
+                multipole_str = '_quad'
+            corr_str = ''
+            if 'correction' in self.cat_corr.keys():
+                if self.cat_corr['correction']['name'] == 'noweight': 
+                    corr_str = '_noweight'
+                elif self.cat_corr['correction']['name'] == 'floriansn': 
+                    corr_str = '_florian'
+                elif self.cat_corr['correction']['name'] == 'hectorsn': 
+                    corr_str = '_hector'
+            
+            f_name = ''.join(['FFT_fkp', multipole_str, corr_str, '.f'])
 
         elif type == 'pk':                  # P(k) code
             if specdict['ell'] == 0: 
@@ -131,6 +140,12 @@ class Fcode:
                     n_cat = 7
                 elif catname == 'qpm': 
                     n_cat = 3 
+                elif catname == 'bigmd':
+                    n_cat = 9 
+                elif catname == 'cmass': 
+                    n_cat = 1 
+                elif catname == 'qso_bigmd':
+                    n_cat = 10
                 else: 
                     raise NotImplementedError()
                 
@@ -172,6 +187,14 @@ class Fcode:
 
                 if catname == 'nseries': 
                     n_cat = 7
+                elif catname == 'qpm': 
+                    n_cat = 3
+                elif catname == 'bigmd': 
+                    n_cat = 9 
+                elif catname == 'cmass': 
+                    n_cat = 1
+                elif catname == 'qso_bigmd':
+                    n_cat = 10
                 else: 
                     raise NotImplementedError()
                 

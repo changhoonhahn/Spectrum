@@ -5,8 +5,8 @@ Manage directories for Fibercollisions Project
 """
 
 def direc(type, cat_corr, **kwargs): 
-    """ Get data directories
-    """
+    ''' Get data directories
+    '''
 
     if type not in ('data', 'fft', 'spec'): 
         raise ValueError()

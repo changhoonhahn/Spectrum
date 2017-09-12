@@ -62,6 +62,7 @@ class Spec(object):
 
             if ell is not None: 
                 if ell != cat_corr['spec']['ell']: 
+                    print ell, cat_corr['spec']['ell']
                     raise ValueError
 
             self.ell = cat_corr['spec']['ell']
@@ -73,24 +74,35 @@ class Spec(object):
             self.scale = np.float(self.cat_corr['spec']['Lbox'])
             k_fund = (2.0*np.pi)/self.scale        # k fundamental 
             self.k_fund = k_fund 
-    
-        try: 
-            self.gal_data = CorrData(self.cat_corr, **self.kwargs)
-        except NotImplementedError: 
-            pass 
-        try: 
-            self.rand_data = Random(self.cat_corr, **self.kwargs)
-        except NotImplementedError: 
-            pass
         
-        try: 
-            self.datafft = Fft('data', self.cat_corr, **self.kwargs)
-        except NotImplementedError: 
+        if 'gal_data' in self.__dict__.keys():  
             pass
-        try: 
-            self.randfft = Fft('random', self.cat_corr, **self.kwargs)
-        except NotImplementedError: 
+        else: 
+            try: 
+                self.gal_data = CorrData(self.cat_corr, **self.kwargs)
+            except NotImplementedError: 
+                pass 
+        if 'rand_data' in self.__dict__.keys():  
             pass
+        else: 
+            try: 
+                self.rand_data = Random(self.cat_corr, **self.kwargs)
+            except NotImplementedError: 
+                pass
+        if 'datafft' in self.__dict__.keys():  
+            pass
+        else: 
+            try: 
+                self.datafft = Fft('data', self.cat_corr, **self.kwargs)
+            except NotImplementedError: 
+                pass
+        if 'randfft' in self.__dict__.keys(): 
+            pass
+        else: 
+            try: 
+                self.randfft = Fft('random', self.cat_corr, **self.kwargs)
+            except NotImplementedError: 
+                pass
         self.file_name = self.file()
     
     def read(self): 
@@ -99,25 +111,25 @@ class Spec(object):
         if self.type == 'pk':   # power spectrum
             if self.ell == 0:   # monopole
                     
-                col_index = [0, 1]
-                data_cols = ['k', 'p0k']
+                col_index = [0, 1, -1]
+                data_cols = ['k', 'p0k', 'count']
 
             elif self.ell == 2:     # quadrupoel
                 
-                col_index = [0, 2, 1, 3]
-                data_cols = ['k', 'p2k', 'p0k', 'p4k']
+                col_index = [0, 2, 1, 3, -2]
+                data_cols = ['k', 'p2k', 'p0k', 'p4k', 'count']
 
             elif self.ell == 4:     # hexadecapole
                 
-                col_index = [0, 3, 1, 2]
-                data_cols = ['k', 'p4k', 'p0k', 'p2k']
+                col_index = [0, 3, 1, 2, -2]
+                data_cols = ['k', 'p4k', 'p0k', 'p2k', 'count']
 
             else: 
                 raise NotImplementedError()
         else:                   # bispectrum
             # bispectrum v5 columns k1, k2, k3, P0(k1), P0(k2), P0(k3), B0, Q0, P2(k1), P2(k2), P2(k3), B2, Q2, dum, dum 
-            col_index = [0, 1, 2, 3, 4, 5, 6, 7]
-            data_cols = ['k1', 'k2', 'k3', 'p0k1', 'p0k2', 'p0k3', 'bk', 'qk']
+            col_index = [0, 1, 2, 3, 4, 5, 6, 7, 11, 12]
+            data_cols = ['k1', 'k2', 'k3', 'p0k1', 'p0k2', 'p0k3', 'bk', 'qk', 'b2k', 'q2k']
 
         spec_data = np.loadtxt(
                     self.file_name, 

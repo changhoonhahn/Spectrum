@@ -29,17 +29,16 @@ class CorrData(Data):
         if self.corrclass_dict is not None:
             corr_name = cat_corr['correction']['name']
 
-            if corr_name not in self.corrclass_dict.keys():
-                cat_corr['correction'] = {'name': 'default'}
-            else: 
+            if corr_name in self.corrclass_dict.keys():
                 self.corrclass = self.corrclass_dict[corr_name](cat_corr, **kwargs)
+            else: 
+                raise ValueError
         else: 
-            try: 
-                cat_corr['correction']['name']
-            except KeyError: 
-                cat_corr['correction'] = {'name': 'default'}
-        
+            pass
+            #raise NotImplementedError 
+
         super(CorrData, self).__init__(cat_corr, **kwargs)
+        self.file_name = self.file()
         
     def build(self): 
         '''
@@ -60,7 +59,6 @@ class CorrData(Data):
         try: 
             file_name = (self.corrclass).file()
             return file_name
-
         except AttributeError: 
             return super(CorrData, self).file()
         

@@ -22,14 +22,15 @@ from util.catalog import Catalog
 # Classes ------------------------------------------------------------
 class Data(object): 
     def __init__(self, cat_corr, **kwargs): 
-        """ A class describing galaxy catalog of simulations or BOSS data. 
+        ''' 
+        A class describing galaxy catalog of simulations or BOSS data. 
         Corresponds to an ASCII file with galaxy/random catalog 
 
         Parameters
         ----------
         cat_corr :  Catalog correction Dictionary 
 
-        """ 
+        ''' 
 
         self.cat_corr = cat_corr.copy()    
         self.kwargs = kwargs    
@@ -117,7 +118,6 @@ class Data(object):
             data_list = [orig_ra, orig_dec, orig_z, true_wfc, orig_wcomp, orig_zupw, orig_upw_index]
 
         elif catalog['name'].lower() == 'qpm':      # QPM 
-
             # import original true data 
             orig_file = ''.join([
                 '/mount/riachuelo2/rs123/BOSS/QPM/cmass/mocks/dr12d/ngc/data/', 
@@ -154,9 +154,58 @@ class Data(object):
             # Only keep galaxies with veto = 0 (for veto values in .veto file) 
             vetomask = np.where(orig_veto == 0)            
             data_list = [true_ra[vetomask], true_dec[vetomask], true_z[vetomask], true_wfc[vetomask], true_comp[vetomask]]
+        
+        elif catalog['name'].lower() == 'bigmd':                
+            # Big MultiDark  
+            P0 = 20000.0
+            # read original file
+            data_dir = '/mount/riachuelo1/hahn/data/BigMD/'
+            if 'version' in catalog.keys():
+                raise NotImplementedError
+                if catalog['version'] == 'blah':
+                    pass
+                orig_file = ''.join([data_dir, 'bigMD-cmass-dr12v4-wcp-veto.dat'])  # hardcoded
+                orig_file = ''.join([data_dir, 'bigMD-cmass-dr12v4-RST-standardHAM-veto.dat'])
+                orig_file = ''.join([data_dir, 'bigMD-cmass-dr12v4-RST-quadru-veto.dat'])
+            else:       # default 
+                orig_file = ''.join([data_dir, 'BigMD-cmass-dr12v4-RST-standHAM-Vpeak-veto.dat'])
+
+            orig_ra, orig_dec, orig_z, orig_wfkp, orig_veto, orig_wfc = np.loadtxt(
+                    orig_file, 
+                    unpack=True, 
+                    usecols=[0,1,2,3,4,5])
+        
+            # true wfc = 1 for all galaxies 
+            true_wfc = np.array([ 1.0 for i in range(len(orig_wfc)) ]) 
+            nbar = (1.0/P0) * (1.0/orig_wfkp - 1.0) 
+
+            vetomask = np.where(orig_veto == 1)     # if veto = 1 then keep; otherwise discard 
+            
+            # write to file 
+            data_list = [
+                    orig_ra[vetomask], 
+                    orig_dec[vetomask], 
+                    orig_z[vetomask], 
+                    nbar[vetomask], 
+                    true_wfc[vetomask]
+                    ]
+    
+        elif catalog['name'].lower() == 'tilingmock': 
+            # read in original file and impose redshift limits 
+            orig_ra, orig_dec, orig_z, orig_w = np.loadtxt(
+                    '/mount/riachuelo1/hahn/data/tiling_mocks/', 
+                    'cmass-boss5003sector-icoll012.dat', 
+                    unpack=True, 
+                    usecols=[0,1,2,3]) 
+            
+            zlow, zhigh = self.survey_zlimits()
+            zlim = np.where((orig_z > zlow) & (orig_z < zhigh))
+            
+            true_wfc = np.repeat(1.0, len(orig_ra))
+
+            data_list = [orig_ra[zlim], orig_dec[zlim], orig_z[zlim], true_wfc[zlim]]
 
         elif catalog['name'].lower() == 'lasdamasgeo':          
-            
             orig_true_file = ''.join(['/mount/chichipio2/rs123/MOCKS/LRGFull_zm_geo/gaussian/zspace/', 
                 'sdssmock_gamma_lrgFull_zm_oriana', str("%02d" % catalog['n_mock']), catalog['letter'], '_no.rdcz.dat']) 
             orig_true_data = np.loadtxt(orig_true_file, unpack=True, usecols=[0,1,2])         # ra, dec, ***CZ***
@@ -171,8 +220,7 @@ class Data(object):
             data_list = [true_ra, true_dec, true_z, true_weight]
             data_fmt = ['%10.5f', '%10.5f', '%10.5f', '%10.5f']
 
-        elif catalog['name'].lower() == 'patchy':               # PATCHY mocks ------------------------
-
+        elif catalog['name'].lower() == 'patchy':       # PATCHY mocks ------------------------
             # read original mock data 
             orig_file = ''.join(['/mount/riachuelo1/hahn/data/PATCHY/dr12/v6c/', 
                 'Patchy-Mocks-DR12CMASS-N-V6C-Portsmouth-mass_', 
@@ -192,36 +240,6 @@ class Data(object):
                         orig_nbar[vetomask], new_wfc[vetomask]] 
             data_fmt=['%10.5f', '%10.5f', '%10.5f', '%.5e', '%10.5f']
         
-        elif 'bigmd' in catalog['name'].lower():                # Big MultiDark ------------
-
-            P0 = 20000.0
-
-            # read rdzw file 
-            data_dir = '/mount/riachuelo1/hahn/data/BigMD/'
-            if catalog['name'].lower() == 'bigmd':
-                orig_file = ''.join([data_dir, 'bigMD-cmass-dr12v4-wcp-veto.dat'])  # hardcoded
-            elif catalog['name'].lower() == 'bigmd1': 
-                orig_file = ''.join([data_dir, 'bigMD-cmass-dr12v4-RST-standardHAM-veto.dat'])
-            elif catalog['name'].lower() == 'bigmd2': 
-                orig_file = ''.join([data_dir, 'bigMD-cmass-dr12v4-RST-quadru-veto.dat'])
-            elif catalog['name'].lower() == 'bigmd3': 
-                orig_file = ''.join([data_dir, 'BigMD-cmass-dr12v4-RST-standHAM-Vpeak-veto.dat']) 
-            else: 
-                raise NotImplementedError('asdlfkjadf') 
-
-            orig_ra, orig_dec, orig_z, orig_wfkp, orig_veto, orig_wfc = np.loadtxt(orig_file, 
-                    unpack=True, usecols=[0,1,2,3,4,5])
-
-            # true wfc = 1 for all galaxies 
-            true_wfc = np.array([ 1.0 for i in range(len(orig_wfc)) ]) 
-            nbar = (1.0/P0) * (1.0/orig_wfkp - 1.0) 
-
-            vetomask = np.where(orig_veto == 1)     # if veto = 1 then keep; otherwise discard 
-            
-            # write to file 
-            header_str = "Columns : ra, dec, z, nz, wfc"
-            data_list = [orig_ra[vetomask], orig_dec[vetomask], orig_z[vetomask], nbar[vetomask], true_wfc[vetomask]]
-            data_fmt=['%10.5f', '%10.5f', '%10.5f', '%.5e', '%10.5f']
 
         else: 
             raise NameError('not yet coded') 

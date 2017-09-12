@@ -43,7 +43,6 @@ class Fft(object):
     def file(self): 
         """ FFT data file name 
         """
-
         #corrdict = (self.cat_corr)['correction']
         specdict = (self.cat_corr)['spec'] 
     
