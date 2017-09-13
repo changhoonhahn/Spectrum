@@ -1,22 +1,20 @@
 """
 
-Fast Fourier Transform data for galaxy catalogs. 
+FFT of galaxy catalogs. 
 
 """
-
 import numpy as np 
 import os.path
 import time 
 import subprocess
-import cosmolopy as cosmos
 
-from corrdata import CorrData 
 from rand import Random
-from util.direc import direc
-from util.fortran import Fcode
+from util import data_dir as direc
+from fortran import Fcode
+from corrdata import CorrData 
+
 
 class Fft(object): 
-
     def __init__(self, DorR, cat_corr, **kwargs): 
         """ A class that describes the FFT of galaxy simulated/observed data 
         """
@@ -167,6 +165,7 @@ class Fft(object):
                 print ''
 
         return None 
+
 
 if __name__=='__main__': 
     cat_corr = {'catalog': {'name': 'qpm', 'n_mock': 1}, 'correction': {'name': 'true'}}

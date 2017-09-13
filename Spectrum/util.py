@@ -10,23 +10,13 @@ import scipy as sp
 import cosmolopy as cosmos
 
 
-def data_dir(type, cat_corr, **kwargs): 
+def data_dir(type, catname):
     ''' Return directory location of data/fft/spec type
-    of catalog and correction specified in cat_corr. 
+    data given catalog name . 
     '''
     if type not in ('data', 'fft', 'spec'): 
         raise ValueError()
-
-    catdict = (cat_corr)['catalog']
-    catname = catdict['name']
-
-    if type == 'data':
-        typedir = 'data/'
-    elif type == 'fft': 
-        typedir = 'FFT/'
-    elif type == 'spec': 
-        typedir = 'power/'
-    
+    # needs to be updated to make more sense  
     if catname == 'lasdamasgeo': 
         catdir = 'LasDamas/Geo/'
     elif catname == 'tilingmock': 
@@ -47,7 +37,7 @@ def data_dir(type, cat_corr, **kwargs):
     else: 
         raise NotImplementedError()
 
-    dir = ''.join([dat_dir(), typedir, catdir])
+    dir = ''.join([dat_dir(), type, '/', catdir])
 
     return dir 
 

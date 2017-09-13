@@ -6,37 +6,29 @@ Author(s): ChangHoon Hahn
 
 
 '''
-
-
 import numpy as np
 import scipy as sp 
-import time 
-import random
 import os.path
-import subprocess
 import cosmolopy as cosmos
+# -- local -- 
+import util as UT
 
-# --- Local ----
-from catalog import Catalog 
 
 # Classes ------------------------------------------------------------
 class Data(object): 
-    def __init__(self, cat_corr, **kwargs): 
-        ''' 
-        A class describing galaxy catalog of simulations or BOSS data. 
-        Corresponds to an ASCII file with galaxy/random catalog 
+    def __init__(self, catinfo, cosmo='fid', **kwargs): 
+        ''' Data class object describes a simulated/observed galaxy catalog. 
 
         Parameters
         ----------
-        cat_corr :  Catalog correction Dictionary 
-
+        catinfo : Dictionary that specifies the details of the sim./obv. catalog.
         ''' 
-
-        self.cat_corr = cat_corr.copy()    
-        self.kwargs = kwargs    
-
-        # catalog 
-        self.catclass = Catalog(self.cat_corr)
+        self.catinfo = catinfo.copy()    
+        self.catalog = (catinfo['catalog'])['name'].lower() 
+        self.kwargs = kwargs.copy() 
+        
+        # cosmology of catalog
+        self.cosmo = cosmo  # type (fid or survey) 
 
         # galaxy properties
         self.ra = None
@@ -46,30 +38,97 @@ class Data(object):
         self.weight = None 
         self.comp = None
 
-        self.cosmos = None   # cosmology of catalog 
-
         self.file_name = self.file()
 
     def read(self): 
-        """ Read galaxy/random catalog data 
-        """
-        data_cols = self.datacolumns()
-        self.data_columns = self.datacolumns()
-    
+        ''' Read in catalog data 
+        '''
+        cols = self.datacolumns()
         datah = np.loadtxt(
                 self.file_name, 
-                skiprows=1, 
+                skiprows=1, # for the header 
                 unpack=True, 
-                usecols=range(len(data_cols))
-                )
-
-        for i_col, col in enumerate(data_cols): 
+                usecols=range(len(cols[0])))
+        # now save the data into the class
+        for i_col, col in enumerate(col[0]): 
             setattr(self, col, datah[i_col])
-        
         return None
     
-    def build(self): 
-        ''' Construct the default galaxy catalog. 
+    def file(self): 
+        ''' Given 'catinfo' dictionary specifing the catalog, return 
+        name of ASCII catalog file
+        '''
+        name_comp = self._file_comp(self.catinfo) 
+        # cosmology string 
+        if self.cosmo == 'fid': 
+            cosmos_str = '.fidcosmo'
+        elif self.cosmo == 'survey': 
+            cosmos_str = '.sureycosmo'
+        else: 
+            raise NotImplementedError() 
+        name_comp.insert(-1, cosmos_str)
+
+        return ''.join(file_list)
+
+    def cosmology(self): 
+        ''' Return `cosmolopy` cosmology dictionary
+        '''
+        if self.cosmo == 'fid': 
+            omega_m = 0.31 
+        elif self.cosmo == 'survey': 
+            if self.catalog == 'nseries':
+                omega_m =  0.286
+            elif self.catalog == 'qpm': 
+                omega_m = 0.31
+            else:
+                raise NotImplementedError()
+        else: 
+            raise NotImplementedError()
+
+        # survey cosmology 
+        cosmo = {} 
+        cosmo['omega_M_0'] = omega_m 
+        cosmo['omega_lambda_0'] = 1.0 - omega_m 
+        cosmo['h'] = 0.676
+        cosmo = cosmos.distance.set_omega_k_0(cosmo) 
+        return cosmo
+    
+    def zlimits(self): 
+        ''' return redshift limit of survey 
+        '''
+        # redshift limits 
+        if self.catalog in ('lasdamasgeo', 'ldgdownnz'):     
+            zlim = [0.16, 0.44]
+        elif self.catalog in ('tilingmock', 'qpm', 'patchy', 'nseries', 'bigmd'): 
+            zlim = [0.43, 0.7]
+        elif self.catalog in ('qso_bigmd'): 
+            zlim = [0.9, 2.2]
+        elif 'bigmd' in self.catalog:             
+            zlim = [0.43, 0.7]
+        elif 'cmass' in self.catalog:
+            if self.catalog == 'cmass': 
+                zlim = [0.43, 0.7] 
+            elif 'cmasslowz' in self.catalog: 
+                if '_high' in self.catalog: 
+                    zlim = [0.5, 0.75]
+                elif '_low' in self.catalog: 
+                    zlim = [0.2, 0.5] 
+            else: 
+                raise NotImplementedError('CMASS or CMASSLOWZ combined sample')
+        else: 
+            raise NotImplementedError()
+        return zlim 
+    
+    def datacolumns(self): 
+        ''' Data columns for the catalog. 
+        Returns [column name, column format, column header]
+        '''
+        catcol = self._catalog_columns((self.catinfo['catalog'])['name'].lower()) 
+        return [catcol['cols'], catcol['fmts'], catcol['hdrs']]
+   
+    def _build(self): 
+        ''' Construct the 'defaut' galaxy catalog by reading in 
+        a variety of data.
 
         Notes
         -----
@@ -79,13 +138,8 @@ class Data(object):
         * PATCHY: Returns mocks with only necessary columns and w_fc = 1
         * Everything is very hardcoded
         '''
-
-        catalog = (self.cat_corr)['catalog']
-
-        output_file = self.file_name
-        
-        if catalog['name'].lower() == 'nseries':       # N Series
-            # read in original files from Jeremy and adjust them to make them
+        if self.catalog == 'nseries': 
+            # read in original files from Jeremy Tinker and adjust them to make them
             # easier to use for fiber collisions
             # read rdzw file 
             data_dir = '/mount/riachuelo1/hahn/data/Nseries/'
@@ -258,68 +312,110 @@ class Data(object):
                 header=header_str) 
         return None 
 
-    def file(self): 
-        ''' 
-        Name of ASCII file of Data/Random catalogy
+    def _file_comp(self): 
+        ''' Given 'catinfo' dictionary specifing the catalog, return 
+        naming components of the ASCII catalog file. Messy and therefore 
+        hidden away!
         '''
-        file_list = self.catclass.file()
-
-        # cosmology string 
-        try: 
-            if self.kwargs['cosmology'] == 'survey': 
-                cosmos_str = '.sureycosmo'
+        cat = self.catalog 
+        dir = UT.data_dir('data', cat)
+        
+        if cat == 'nseries': # Nseries
+            file_beg = ''.join(['CutskyN', str(cat['n_mock'])])
+            file_end = '.dat'
+        elif 'cmass' in cat: # CMASS
+            if cat == 'cmass': 
+                file_beg = 'cmass-dr12v4-N-Reid'
+                file_end = '.dat'
+            elif 'cmasslowz' in cat:
+                file_beg = ''.join(['galaxy_DR12v5_', self.catalog_name.upper(), '_North'])
+                file_end = '.dat'
+        elif cat == 'qpm':            # QPM
+            file_beg = ''.join(['a0.6452_', str("%04d" % cat['n_mock']), '.dr12d_cmass_ngc.vetoed'])
+            file_end = '.dat'
+        elif cat == 'tilingmock':     # Tiling Mock 
+            file_beg = 'cmass-boss5003sector-icoll012'
+            file_end = '.dat'
+        elif cat == 'bigmd':          # Big MultiDark
+            if 'version' in catinfo['catalog'].keys(): 
+                if catinfo['catalog']['version'] == 'nowiggles': 
+                    file_beg = 'BigMD-cmass-dr12v4-nowiggle-veto'
+                    file_end = '.dat'
+                else: 
+                    raise NotImplementedError
             else: 
-                cosmos_str = '.fidcosmo'
-        except KeyError: 
-            cosmos_str = '.fidcosmo'
-        file_list.insert( -1, cosmos_str )
-
-        # correction string 
-        return ''.join(file_list)
-
-    def cosmo(self): 
-        try: 
-            if self.kwargs['cosmology'] == 'survey': 
-                # survey cosmology
-                self.cosmo = self.catclass.cosmo()
-
-                return self.cosmo
-            else: 
-                # default fiducial cosmology (hardcoded)
-                omega_m = 0.31 
-
-        except KeyError: 
-            omega_m = 0.31  # default 
-
-        # survey cosmology 
-        cosmo = {} 
-        cosmo['omega_M_0'] = omega_m 
-        cosmo['omega_lambda_0'] = 1.0 - omega_m 
-        cosmo['h'] = 0.676
-        cosmo = cosmos.distance.set_omega_k_0(cosmo) 
-        self.cosmos = cosmo 
-
-        return self.cosmos
+                file_beg = 'BigMD-cmass-dr12v4-RST-standHAM-Vpeak_vetoed'
+                file_end = '.dat'
+        elif cat == 'qso_bigmd': 
+            if 'version' in catinfo['catalog'].keys(): 
+                if catinfo['catalog']['version'] == 'evo': 
+                    file_beg = 'QSO-BigMD-1481.43deg2-bin0_v1.0-evo'
+                    file_end = '.dat'
+                elif catinfo['catalog']['version'] == 'noevo': 
+                    file_beg = 'QSO-BigMD-1481.43deg2-bin0_v1.0-noevo'
+                    file_end = '.dat'
+                elif catinfo['catalog']['version'] == 'eboss': 
+                    file_beg = 'eboss_v1.0-QSO-NS-eboss_v1.0-bin0'
+                    file_end = '.dat'
+                elif catinfo['catalog']['version'] == 'ebossv1.5': 
+                    file_beg = 'eboss_v1.5-QSO'
+                    file_end = '.dat'
+                elif catinfo['catalog']['version'] == 'ebossnew': 
+                    file_beg = 'ebossQSOs_y1_comp_cut_0.5_double_weight_col_Z'
+                    file_end = '.dat'
+                elif 'jackknife' in catinfo['catalog']['version']: 
+                    n_jack = catinfo['catalog']['version'].split('jackknife')[-1]
+                    file_beg = ''.join(['QSO-bin0-jackknife', str(n_jack)])
+                    file_end = '.dat'
+                elif 'v2' in catinfo['catalog']['version']: 
+                    if 'z' in catinfo['catalog']['version']: 
+                        file_beg = 'BigMDPL-QSOZ'
+                    elif 'nsat' in catinfo['catalog']['version']: 
+                        file_beg = 'BigMDPL-QSO-NSAT'
+                    else: 
+                        file_beg = 'BigMDPL-QSO'
+                    file_end = '.dat'
+        else: 
+            raise NotImplementedError
+        return [dir, file_beg, file_end]
     
-    def survey_zlimits(self): 
-        ''' Catalog survey limits
+    def _catalog_columns(self, catname):
+        ''' Given catalog name, return details on the data columns
         '''
-        return (self.catclass).survey_zlimits()
-    
-    def datacolumns(self): 
-        ''' 
-        Data columns for given catalog and correction
-        '''
-        return (self.catclass).datacolumns()
-
-    def datacols_fmt(self): 
-        ''' 
-        Data format of columns of catalog data
-        '''
-        return (self.catclass).datacols_fmt()
-
-    def datacols_header(self): 
-        ''' 
-        Header string that describes data columsn
-        '''
-        return (self.catclass).datacols_header()
+        # hardcoded dictionary of catlaog columsn 
+        catcol = {
+                'nseries': {
+                    'cols': ['ra', 'dec', 'z', 'wfc', 'comp', 'zupw', 'upw_index'], 
+                    'fmts': ['%10.5f', '%10.5f', '%10.5f', '%10.5f', '%10.5f', '%10.5f', '%i'], 
+                    'hdrs': "Column : ra, dec, z, wfc, comp, z_upw, upw_index"
+                    }, 
+                'qpm': {
+                    'cols': ['ra', 'dec', 'z', 'wfc', 'comp'], 
+                    'fmts': ['%10.5f', '%10.5f', '%10.5f', '%10.5f', '%10.5f'],
+                    'hdrs': "Column : ra, dec, z, wfc, comp"
+                    }, 
+                'tilingmock': {
+                    'cols': ['ra', 'dec', 'z', 'wfc'], 
+                    'fmts': ['%10.5f', '%10.5f', '%10.5f', '%10.5f'],
+                    'hdrs': "Column : ra, dec, z, wfc"
+                    }, 
+                'bigmd': {
+                    'cols': ['ra', 'dec', 'z', 'wfc'], 
+                    'fmts': ['%10.5f', '%10.5f', '%10.5f', '%10.5f'],
+                    'hdrs': "Columns : ra, dec, z, wfc"
+                    },
+                'qso_bigmd': {
+                    'cols': ['ra', 'dec', 'z', 'nbar', 'wfc'], 
+                    'fmts': ['%10.5f', '%10.5f', '%10.5f', '%.5e', '%10.5f'],
+                    'hdrs': "Columns : ra, dec, z, 'nbar', wfc"
+                    },
+                'cmass': {
+                    'cols': ['ra', 'dec', 'z', 'nbar', 'wsys', 'wnoz', 'wfc', 'comp'], 
+                    'fmts': ['%10.5f', '%10.5f', '%10.5f', '%.5e', '%10.5f', '%10.5f', '%10.5f', '%10.5f'], 
+                    'hdrs': 'Columns : ra, dec, z, nbar, w_systot, w_noz, w_cp, comp'
+                    }
+                }
+        if catname not in catcol.key(): 
+            raise ValueError("catalog name is not in catalog_column dictionary!") 
+        else: 
+            return catcol[catname] 

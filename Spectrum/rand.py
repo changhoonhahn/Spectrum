@@ -6,9 +6,10 @@ Random data for calculating power/bispectrum
 import numpy as np
 import time 
 # --- Local ---
-from ChangTools.fitstables import mrdfits
 from data import Data
-from util.direc import direc
+from util import data_dir as direc
+from ChangTools.fitstables import mrdfits
+
 
 class Random(Data): 
     def __init__(self, cat_corr, **kwargs): 
@@ -392,6 +393,7 @@ class Random(Data):
 
         return hdr_str
 
+
 def NoweightRandom(cat_corr): 
     ''' Hack to generate downsampled no weight randoms
     '''
@@ -454,8 +456,6 @@ def NoweightRandom(cat_corr):
             header=orig_rand.datacols_header()
             ) 
     return None
-
-
 
 
 if __name__=="__main__":
