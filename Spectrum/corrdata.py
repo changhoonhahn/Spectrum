@@ -61,7 +61,8 @@ class CorrData(Data):
             return file_name
         except AttributeError: 
             return super(CorrData, self).file()
-        
+       
+'''
 if __name__ == '__main__':
     for i_mock in xrange(1,85): 
         cat_corr = {
@@ -70,3 +71,4 @@ if __name__ == '__main__':
                 }
         corrclass = Data(cat_corr, clobber=True)
         corrclass.build()
+'''

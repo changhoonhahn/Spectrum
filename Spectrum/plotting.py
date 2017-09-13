@@ -15,6 +15,7 @@ from defutility.plotting import prettycolors
 from spec import Spec
 from average import AvgSpec
 
+
 def plot_pk_comp(cat_corrs, n_mock, ell=0, type='ratio', **kwargs): 
     ''' Plot comparison of average power spectrum monopole or quadrupole (avg(P(k))) 
     for multiple a list of catalog and correction specifications. Main use is to 

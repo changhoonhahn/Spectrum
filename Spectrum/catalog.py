@@ -1,13 +1,8 @@
-'''
 
-
-
-'''
 
 class Catalog(object): 
     def __init__(self, cat_corr): 
-        ''' 
-        Class describing simulated/data catalogs 
+        ''' Class object describing simulated/data catalogs 
         '''
         self.cat_corr = cat_corr.copy()
         self.catalog_name = (cat_corr['catalog'])['name'].lower()

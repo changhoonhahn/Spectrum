@@ -12,8 +12,8 @@ from rand import Random
 from corrdata import CorrData 
 
 from fft import Fft
-from util.direc import direc
-from util.fortran import Fcode
+from util import data_dir as direc
+from fortran import Fcode
 
 # Classes ------------------------------------------------------------
 class Spec(object): 

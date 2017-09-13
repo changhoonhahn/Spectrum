@@ -17,7 +17,7 @@ import subprocess
 import cosmolopy as cosmos
 
 # --- Local ----
-from util.catalog import Catalog 
+from catalog import Catalog 
 
 # Classes ------------------------------------------------------------
 class Data(object): 
