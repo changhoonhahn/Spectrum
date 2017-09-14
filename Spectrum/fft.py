@@ -7,7 +7,7 @@ import numpy as np
 import os.path
 import time 
 import subprocess
-
+# -- local -- 
 import util as UT 
 from data import Data
 from fortran import Fcode
@@ -17,7 +17,7 @@ class Fft(object):
     def __init__(self, catinfo): 
         ''' class object for the FFT of a given catinfo dictionary 
         '''
-        self.catinfo = data_obj.catinfo.copy() 
+        self.catinfo = catinfo.copy() 
         if 'spec' not in self.catinfo.keys(): 
             # default pk/bk parameters
             self.catinfo['spec'] = {
@@ -47,7 +47,7 @@ class Fft(object):
             str_fft, (self.data_file).rsplit('/')[-1], str_spec])
         return fft_file  
 
-    def build(self): 
+    def build(self, clobber=False): 
         ''' Run FFT FORTRAN code to calculate FFT of data
         '''
         specdict = self.catinfo['spec'] 
@@ -56,85 +56,40 @@ class Fft(object):
             # if the data doesn't exist, build data first        
             print('data file does not exist!')
             self.data_obj.build()
-        fft_type = 'fft'
 
-        codeclass = Fcode(fft_type, self.cat_corr) 
-        fftcode = codeclass.code
-        fftexe = codeclass.fexe()
+        fcode = Fcode('fft', self.catinfo) 
+        fftcode, fftexe = fcode.code, fcode.exe
         
         # code and exe modification time 
         fftcode_t_mod, fftexe_t_mod = codeclass.mod_time()
-
         if fftexe_t_mod < fftcode_t_mod: 
-            codeclass.compile()
-                
-        fft_file = self.file() 
+            print('FFT code was modified after .exe file was compiled') 
+            #codeclass.compile()
 
-        if specdict['ell'] == 0:       # Monopole 
-            
-            # command line call 
-            FFTcmd = codeclass.commandline_call(
+        # command line call 
+        FFTcmd = fcode.commandline_call(
                     DorR = self.type, 
                     datafile = self.data_file,
                     fftfile = self.file_name
                     ) 
 
-            if 'clobber' not in (self.kwargs).keys(): 
-                bool_clobber = False
-            else: 
-                bool_clobber = self.kwargs['clobber']
-
-            if any([not os.path.isfile(self.file_name), bool_clobber]):
-                print ''
-                print '-----------------------'
-                print 'Constructing '
-                print self.file_name  
-                print '-----------------------'
-                print ''
-                print FFTcmd
-                print '-----------------------'
-
-                subprocess.call(FFTcmd.split())
-            else: 
-                print ''
-                print '-----------------------'
-                print self.file_name  
-                print 'Already Exists'
-                print '-----------------------'
-                print ''
-
-        else:                           # others Quadrupole
-            # command line call 
-            FFTcmd = codeclass.commandline_call(
-                    DorR = self.type, 
-                    datafile = self.data_file,
-                    fftfile = self.file_name
-                    ) 
-
-            if 'clobber' not in (self.kwargs).keys(): 
-                bool_clobber = False
-            else: 
-                bool_clobber = self.kwargs['clobber']
-
-            if any([not os.path.isfile(self.file_name), bool_clobber]):
-                print ''
-                print '-----------------------'
-                print 'Constructing '
-                print self.file_name  
-                print '-----------------------'
-                print ''
-                print FFTcmd
-                print '-----------------------'
-
-                subprocess.call(FFTcmd.split())
-            else: 
-                print ''
-                print '-----------------------'
-                print self.file_name  
-                print 'Already Exists'
-                print '-----------------------'
-                print ''
-
+        if any([not os.path.isfile(self.file_name), clobber]):
+            print ''
+            print '-----------------------'
+            print 'Constructing '
+            print self.file_name  
+            print '-----------------------'
+            print ''
+            print FFTcmd
+            print '-----------------------'
+            subprocess.call(FFTcmd.split())
+        else: 
+            print ''
+            print '-----------------------'
+            print self.file_name  
+            print 'Already Exists'
+            print '-----------------------'
+            print ''
         return None 
 
 

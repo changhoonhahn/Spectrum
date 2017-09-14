@@ -19,6 +19,7 @@ def t_mod(file):
     else: 
         return os.path.getmtime(file)
 
+
 def data_dir(type, catname):
     ''' Return directory location of data/fft/spec type
     data given catalog name . 
@@ -45,10 +46,7 @@ def data_dir(type, catname):
             catdir = 'CMASS/dr12v5/'
     else: 
         raise NotImplementedError()
-
-    dir = ''.join([dat_dir(), type, '/', catdir])
-
-    return dir 
+    return  ''.join([dat_dir(), type, '/', catdir])
 
 
 def code_dir(): 

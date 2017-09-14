@@ -25,6 +25,12 @@ class Data(object):
         ''' 
         self.catinfo = catinfo.copy()    
         self.catalog = (catinfo['catalog'])['name'].lower() 
+        
+        # cosmology of catalog
+        try: 
+            self.cosmo = catinfo['cosmology']# type (fid or survey) 
+        except KeyError: 
+            self.cosmo = 'fid' # type (fid or survey) 
 
         # data or random 
         try: 
@@ -39,12 +45,6 @@ class Data(object):
         elif self.type == 'random': 
             self.file_name = self.rfile()
         
-        # cosmology of catalog
-        try: 
-            self.cosmo = (catinfo['cosmology'])['name'] # type (fid or survey) 
-        except KeyError: 
-            self.cosmo = 'fid' # type (fid or survey) 
-
         # galaxy properties
         self.ra = None
         self.dec = None
@@ -149,8 +149,7 @@ class Data(object):
                     file_name = 'BigMDPLv2-QSO.ran'
         else: 
             raise NotImplementedError()
-        
-        return  ''.join([UT.data_dir('data', self.catinfo), file_name])
+        return  ''.join([UT.data_dir('data', self.catalog), file_name])
 
     def cosmology(self): 
         ''' Return `cosmolopy` cosmology dictionary
