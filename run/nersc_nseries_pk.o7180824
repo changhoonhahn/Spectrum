@@ -1,0 +1,45 @@
+  -1746.759     <= xD <=  -109.6873    
+  -1601.471     <= yD <=   1517.594    
+  -106.1666     <= zD <=   1612.866    
+ Number of Galaxies in Box=      646667   100.0000     percent
+ upweighted-Galaxies in Box=   646667.000000000     
+ comp+upweighted-Galaxies in Box=   654257.358728051     
+ comp+upweighted+FKP-Galaxies in Box=   110097.650552310     
+ average comp=  0.988585501820633     
+ these are normalization integrals from data
+ I10=   646667.000000000     
+ I12=   23452.3709563063     
+ I22=   4.34610969853247     
+ I13=   6420.78125654906     
+ I23=  0.855432112417702     
+ I33=  1.750390961294118E-004
+ dcg assigned
+ dcgxx,dcgyy,dcgzz assigned
+ dcgxy,dcgyz,dcgzx assigned
+ dcgxxxx,dcgyyyy,dcgzzzz assigned
+ dcgyyyz,dcgzzzx assigned
+ dcgxxzz,dcgyyzz,dcgxxyz assigned
+ dcgw assigned
+ dcgwxx,dcgwyy,dcgwzz assigned
+ dcgwxy,dcgwyz,dcgwzx assigned
+ dcgwyyyy,dcgwzzzz assigned
+ dcgwyyyx,dcgwzzzx assigned
+ delta4w_g 2nd part
+ delta4w_g 3rd part
+  -1746.977     <= xR <=  -109.0034    
+  -1612.266     <= yR <=   1528.962    
+  -110.2431     <= zR <=   1624.778    
+ CoM is at  -891.1816      -75.46539       581.7313    
+ Number of Randoms in Box=    32902440   100.0000     percent
+ upweighted randoms in Box=   32902440.0000000     
+ comp+upweighted-randoms in Box=   33297171.9995494     
+ comp+upweighted+FKP-randoms in Box=   5583345.83703219     
+ average comp=  0.988417866875066     
+ these are normalization integrals from random
+ to be scaled by alpha in power spectrum code
+ I10=   32902440.0000000     
+ I12=   1185669.99195880     
+ I22=   220.606212494031     
+ I13=   324065.098763077     
+ I23=   43.2845125930820     
+ I33=  8.892452777977927E-003

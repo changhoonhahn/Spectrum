@@ -1,0 +1,41 @@
+  -1746.977     <= xR <=  -109.0034    
+  -1612.266     <= yR <=   1528.962    
+  -110.2431     <= zR <=   1624.778    
+ CoM is at  -891.1816      -75.46539       581.7313    
+ Number of Randoms in Box=    32902440   100.0000     percent
+ upweighted randoms in Box=   32902440.0000000     
+ comp+upweighted-randoms in Box=   33297171.9995494     
+ comp+upweighted+FKP-randoms in Box=   5583345.83703219     
+ average comp=  0.988417866875066     
+ these are normalization integrals from random
+ to be scaled by alpha in power spectrum code
+ I10=   32902440.0000000     
+ I12=   1185669.99195880     
+ I22=   220.606212494031     
+ I13=   324065.098763077     
+ I23=   43.2845125930820     
+ I33=  8.892452777977927E-003
+ alphaSTD is  1.9654075E-02
+ alpha sys is  1.9654075E-02
+ alpha tot is  1.9718938E-02
+ alpha syscomp is  1.9649038E-02
+ random, data shot noise=   5373.222       5408.993    
+ window normalization=   109707.4    
+/global/u1/c/chahah/projects/Spectrum/dat/spec/nseries/POWER_Q_CutskyN1.fidcosmo.dat.grid360.P020000.box3600
+
+-----------------------
+Constructing 
+/global/u1/c/chahah/projects/Spectrum/dat/fft/nseries/FFT_Q_Nseries_cutsky_randoms_50x_redshifts_comp.dat.grid360.P020000.box3600
+-----------------------
+
+/global/u1/c/chahah/projects/Spectrum/Spectrum/fortran/exe/FFT_fkp_quad.exe 7 0 3600 360 4 1 20000 /global/u1/c/chahah/projects/Spectrum/dat/data/nseries/Nseries_cutsky_randoms_50x_redshifts_comp.dat /global/u1/c/chahah/projects/Spectrum/dat/fft/nseries/FFT_Q_Nseries_cutsky_randoms_50x_redshifts_comp.dat.grid360.P020000.box3600
+-----------------------
+/global/u1/c/chahah/projects/Spectrum/Spectrum/fortran/exe/power_quad.exe /global/u1/c/chahah/projects/Spectrum/dat/fft/nseries/FFT_Q_CutskyN1.fidcosmo.dat.grid360.P020000.box3600 /global/u1/c/chahah/projects/Spectrum/dat/fft/nseries/FFT_Q_Nseries_cutsky_randoms_50x_redshifts_comp.dat.grid360.P020000.box3600 /global/u1/c/chahah/projects/Spectrum/dat/spec/nseries/POWER_Q_CutskyN1.fidcosmo.dat.grid360.P020000.box3600 3600 180
+
+-----------------------
+Constructing 
+/global/u1/c/chahah/projects/Spectrum/dat/spec/nseries/POWER_Q_CutskyN1.fidcosmo.dat.grid360.P020000.box3600
+-----------------------
+
+/global/u1/c/chahah/projects/Spectrum/Spectrum/fortran/exe/power_quad.exe /global/u1/c/chahah/projects/Spectrum/dat/fft/nseries/FFT_Q_CutskyN1.fidcosmo.dat.grid360.P020000.box3600 /global/u1/c/chahah/projects/Spectrum/dat/fft/nseries/FFT_Q_Nseries_cutsky_randoms_50x_redshifts_comp.dat.grid360.P020000.box3600 /global/u1/c/chahah/projects/Spectrum/dat/spec/nseries/POWER_Q_CutskyN1.fidcosmo.dat.grid360.P020000.box3600 3600 180
+-----------------------

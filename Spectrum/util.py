@@ -32,7 +32,7 @@ def data_dir(type, catname):
     elif catname == 'tilingmock': 
         catdir = 'tiling_mocks/'
     elif catname == 'qpm': 
-        catdir = 'qpm/dr12d/'
+        catdir = 'qpm/'
     elif catname == 'nseries': 
         catdir = 'nseries/'
     elif catname == 'patchy': 

@@ -1,0 +1,11 @@
+#!/bin/bash -l 
+#SBATCH -p regular 
+#SBATCH -N 1
+#SBATCH -t 00:30:00
+#SBATCH -J nersc_nseries_pk
+#SBATCH -o nersc_nseries_pk.o%j
+#SBATCH -L SCRATCH,project
+
+module load python/2.7-anaconda
+
+srun -n 1 python /global/homes/c/chahah/projects/Spectrum/Spectrum/tests/test_spec.py 

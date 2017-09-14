@@ -254,12 +254,10 @@ class Data(object):
             
             # write to file 
             data_list = [orig_ra, orig_dec, orig_z, true_wfc, orig_wcomp, orig_zupw, orig_upw_index]
-
-        elif catalog['name'].lower() == 'qpm':      # QPM 
+        elif self.catalog == 'qpm': # QPM 
             # import original true data 
-            orig_file = ''.join([
-                '/mount/riachuelo2/rs123/BOSS/QPM/cmass/mocks/dr12d/ngc/data/', 
-                'a0.6452_', str("%04d" % catalog['n_mock']), '.dr12d_cmass_ngc.rdz']) 
+            orig_file = ''.join([UT.data_dir('data', self.catalog),
+                'a0.6452_', str("%04d" % self.catinfo['catalog']['n_mock']), '.dr12d_cmass_ngc.rdz']) 
             orig_data = np.loadtxt(orig_file) 
 
             orig_info_file = orig_file+'.info'
