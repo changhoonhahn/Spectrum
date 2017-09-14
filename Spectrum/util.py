@@ -52,7 +52,7 @@ def data_dir(type, catname):
 def code_dir(): 
     ''' Directory where all the code is located (the directory that this file is in!)
     '''
-    return os.path.dirname(os.path.realpath(__file__))
+    return os.path.dirname(os.path.realpath(__file__))+'/'
 
 
 def fortran_dir(): 

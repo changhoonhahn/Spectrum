@@ -9,21 +9,20 @@ import os.path
 import util as UT 
 
 class Fcode: 
-
     def __init__(self, type, catinfo): 
         ''' Class for all the FORTRAN stuff for P(k)/B(k) calculations 
         '''
         self.catinfo = catinfo.copy()
         self.type = type
 
-        specdict = catinfo['spec']
-        
         self.code = self.code_name()
         self.exe = self.exe_name()  
 
     def code_name(self): 
         ''' code name 
         '''
+        specdict = self.catinfo['spec']
+        
         if self.type == 'fft': # fft code
             multipole_str = ''
             if specdict['ell'] != 0: 
@@ -37,12 +36,12 @@ class Fcode:
                 elif self.catinfo['correction']['name'] == 'hectorsn': 
                     corr_str = '_hector'
             f_name = ''.join(['FFT_fkp', multipole_str, corr_str, '.f'])
-        elif type == 'pk': # P(k) code
+        elif self.type == 'pk': # P(k) code
             if specdict['ell'] == 0: 
                 f_name = 'power-Igal-Irand.f' 
             else:
                 f_name = 'power_quad.f'
-        elif type == 'bk': # B(k1,k2,k3) code
+        elif self.type == 'bk': # B(k1,k2,k3) code
             f_name = 'bisp_fast_bin_fftw2_quad.f' 
         else: 
             raise NotImplementedError
@@ -106,16 +105,10 @@ class Fcode:
         '''
         specdict = self.catinfo['spec']
         
-        fcode_t_mod, fexe_t_mod = self.mod_time()
-        if fcode_t_mod < fcode_t_mod: 
-            raise ValueError("Compile failed")
-
-        fort_exe = self.fexe() 
+        fort_exe = self.exe 
 
         if self.type == 'fft': 
-
             if specdict['ell'] == 0:    # monopole
-
                 if not all([kwarg in kwargs.keys() for kwarg in ['DorR', 'datafile', 'fftfile']]):
 
                     err_msg = ''.join([

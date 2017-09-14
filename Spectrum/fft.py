@@ -10,7 +10,7 @@ import subprocess
 # -- local -- 
 import util as UT 
 from data import Data
-from fortran import Fcode
+from fort import Fcode
 
 
 class Fft(object): 
@@ -61,14 +61,14 @@ class Fft(object):
         fftcode, fftexe = fcode.code, fcode.exe
         
         # code and exe modification time 
-        fftcode_t_mod, fftexe_t_mod = codeclass.mod_time()
+        fftcode_t_mod, fftexe_t_mod = UT.t_mod(fftcode), UT.t_mod(fftexe)
         if fftexe_t_mod < fftcode_t_mod: 
             print('FFT code was modified after .exe file was compiled') 
             #codeclass.compile()
 
         # command line call 
         FFTcmd = fcode.commandline_call(
-                    DorR = self.type, 
+                    DorR = self.data_obj.type, 
                     datafile = self.data_file,
                     fftfile = self.file_name
                     ) 

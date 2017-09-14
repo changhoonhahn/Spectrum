@@ -34,7 +34,7 @@ class Data(object):
 
         # data or random 
         try: 
-            self.type = catinfo['type']
+            self.type = catinfo['catalog']['type']
         except KeyError:  # by default it assumes data 
             self.type = 'data' 
 
@@ -812,5 +812,3 @@ def NoweightRandom(cat_corr):
             header=orig_rand.datacols_header()
             ) 
     return None
-
-
