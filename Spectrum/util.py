@@ -10,6 +10,15 @@ import scipy as sp
 import cosmolopy as cosmos
 
 
+def t_mod(file):   
+    ''' return the modified time of `file`. if `file` does 
+    not exist, returns 0 
+    '''
+    if not os.path.isfile(file): 
+        return 0 
+    else: 
+        return os.path.getmtime(file)
+
 def data_dir(type, catname):
     ''' Return directory location of data/fft/spec type
     data given catalog name . 
@@ -22,9 +31,9 @@ def data_dir(type, catname):
     elif catname == 'tilingmock': 
         catdir = 'tiling_mocks/'
     elif catname == 'qpm': 
-        catdir = 'QPM/dr12d/'
+        catdir = 'qpm/dr12d/'
     elif catname == 'nseries': 
-        catdir = 'Nseries/'
+        catdir = 'nseries/'
     elif catname == 'patchy': 
         catdir = 'PATCHY/dr12/v6c/'
     elif 'bigmd' in catname:
@@ -46,6 +55,10 @@ def code_dir():
     ''' Directory where all the code is located (the directory that this file is in!)
     '''
     return os.path.dirname(os.path.realpath(__file__))
+
+
+def fortran_dir(): 
+    return code_dir()+'fortran/'
 
 
 def dat_dir(): 

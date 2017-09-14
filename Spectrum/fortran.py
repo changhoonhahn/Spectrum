@@ -6,95 +6,87 @@ Interface with FORTRAN code for galaxy powerspectrum and bispectrum calculations
 import subprocess
 import os.path
 
+import util as UT 
+
 class Fcode: 
 
-    def __init__(self, type, cat_corr): 
-        ''' Class to describe FORTRAN code for fiber collision corrected 
-        powerspectrum calculations 
-
+    def __init__(self, type, catinfo): 
+        ''' Class for all the FORTRAN stuff for P(k)/B(k) calculations 
         '''
-        self.cat_corr = cat_corr.copy()
+        self.catinfo = catinfo.copy()
         self.type = type
-    
-        fcode_dir = '/home/users/hahn/powercode/Spectrum/Spectrum/fortran/'
 
-        specdict = cat_corr['spec']
+        specdict = catinfo['spec']
         
-        if type == 'fft':                   # fft code
+        self.code = self.code_name()
+        self.exe = self.exe_name()  
+
+    def code_name(self): 
+        ''' code name 
+        '''
+        if self.type == 'fft': # fft code
             multipole_str = ''
             if specdict['ell'] != 0: 
                 multipole_str = '_quad'
             corr_str = ''
-            if 'correction' in self.cat_corr.keys():
-                if self.cat_corr['correction']['name'] == 'noweight': 
+            if 'correction' in self.catinfo.keys():
+                if self.catinfo['correction']['name'] == 'noweight': 
                     corr_str = '_noweight'
-                elif self.cat_corr['correction']['name'] == 'floriansn': 
+                elif self.catinfo['correction']['name'] == 'floriansn': 
                     corr_str = '_florian'
-                elif self.cat_corr['correction']['name'] == 'hectorsn': 
+                elif self.catinfo['correction']['name'] == 'hectorsn': 
                     corr_str = '_hector'
-            
             f_name = ''.join(['FFT_fkp', multipole_str, corr_str, '.f'])
-
-        elif type == 'pk':                  # P(k) code
+        elif type == 'pk': # P(k) code
             if specdict['ell'] == 0: 
                 f_name = 'power-Igal-Irand.f' 
             else:
                 f_name = 'power_quad.f'
-
-        elif type == 'bk':                  # B(k1,k2,k3) code
+        elif type == 'bk': # B(k1,k2,k3) code
             f_name = 'bisp_fast_bin_fftw2_quad.f' 
-
         else: 
             raise NotImplementedError
         
-        f_code = ''.join([fcode_dir, f_name])
-        self.code = f_code
-        self.exe = None 
+        f_code = ''.join([UT.fortran_dir(), f_name])
+        return f_code
 
-    def fexe(self): 
-        """ Fortran executable that corresponds to fortran code
-        """
-        code_dir = ''.join(['/'.join((self.code).split('/')[:-1]), '/'])
+    def exe_name(self): 
+        ''' name of compiled fortran executable.
+        '''
         code_file = (self.code).split('/')[-1]
-    
-        fort_exe = ''.join([code_dir, 'exe/', '.'.join(code_file.rsplit('.')[:-1]), '.exe'])
-        self.exe = fort_exe 
-        
-        return fort_exe 
+        return ''.join([UT.fortran_dir(), 'exe/', '.'.join(code_file.rsplit('.')[:-1]), '.exe'])
 
     def compile(self):
-        """ Compile fortran code
-        """
-
-        fort_exe = self.fexe() 
-        specdict = self.cat_corr['spec']
+        ''' Compile fortran code
+        '''
+        specdict = self.catinfo['spec']
 
         # compile command for fortran code. Quadruple codes have more
         # complex compile commands specified by Roman 
         if (self.type == 'fft') and (specdict['ell'] != 0): 
             compile_cmd = ' '.join([
                 'ifort -fast -o', 
-                fort_exe, 
+                self.exe, 
                 self.code, 
                 '-L/usr/local/fftw_intel_s/lib -lsrfftw -lsfftw -lm'
                 ])
         elif (self.type == 'pk') and (specdict['ell'] != 0): 
             compile_cmd = ' '.join([
                 'ifort -fast -o', 
-                fort_exe, 
+                self.exe, 
                 self.code
                 ])
         elif (self.type == 'bk'): 
             compile_cmd = ' '.join([
                 'ifort -fast -o', 
-                fort_exe, 
+                self.exe, 
                 self.code, 
                 '-L/usr/local/fftw_intel_s/lib -lsrfftw -lsfftw'
                 ])
         else: 
             compile_cmd = ' '.join([
                 'ifort -O3 -o', 
-                fort_exe, 
+                self.exe, 
                 self.code, 
                 '-L/usr/local/fftw_intel_s/lib -lsfftw -lsfftw'
                 ])
@@ -107,13 +99,12 @@ class Fcode:
 
         # call compile command 
         subprocess.call(compile_cmd.split())
-
         return None 
 
     def commandline_call(self, **kwargs): 
-        """ Command line call for Fortran code
-        """
-        specdict = self.cat_corr['spec']
+        ''' Command line call for Fortran code
+        '''
+        specdict = self.catinfo['spec']
         
         fcode_t_mod, fexe_t_mod = self.mod_time()
         if fcode_t_mod < fcode_t_mod: 
@@ -133,8 +124,8 @@ class Fcode:
                         ])
                     raise KeyError(err_msg)
                 
-                catname = ((self.cat_corr)['catalog'])['name']
-                specdict = (self.cat_corr)['spec']
+                catname = ((self.catinfo)['catalog'])['name']
+                specdict = (self.catinfo)['spec']
 
                 if catname == 'nseries': 
                     n_cat = 7
@@ -182,8 +173,8 @@ class Fcode:
                         ])
                     raise KeyError(err_msg)
                 
-                catname = ((self.cat_corr)['catalog'])['name']
-                specdict = (self.cat_corr)['spec']
+                catname = ((self.catinfo)['catalog'])['name']
+                specdict = (self.catinfo)['spec']
 
                 if catname == 'nseries': 
                     n_cat = 7
@@ -237,8 +228,8 @@ class Fcode:
                         ])
                     raise KeyError(err_msg)
                 
-                catname = ((self.cat_corr)['catalog'])['name']
-                specdict = (self.cat_corr)['spec']
+                catname = ((self.catinfo)['catalog'])['name']
+                specdict = (self.catinfo)['spec']
 
                 nbins = int(specdict['Ngrid']/2) # number of bins
 
@@ -259,7 +250,7 @@ class Fcode:
                         ])
                     raise KeyError(err_msg)
                 
-                specdict = (self.cat_corr)['spec']
+                specdict = (self.catinfo)['spec']
 
                 nbins = int(specdict['Ngrid']/2) # number of bins hardcoded to be Ngrid/2
 
@@ -299,22 +290,3 @@ class Fcode:
             raise NotImplementError()
 
         return cmdline_call
-
-    def mod_time(self): 
-        """ Modification time of .f and .exe file 
-        """
-        
-        if self.exe == None: 
-            self.fexe()
-        
-        if not os.path.isfile(self.code): 
-            fcode_t_mod = 0 
-        else: 
-            fcode_t_mod = os.path.getmtime(self.code)
-
-        if not os.path.isfile(self.exe): 
-            fexe_t_mod = 0 
-        else: 
-            fexe_t_mod = os.path.getmtime(self.exe)
-        
-        return [fcode_t_mod, fexe_t_mod]

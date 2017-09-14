@@ -8,84 +8,55 @@ import os.path
 import time 
 import subprocess
 
-from rand import Random
-from util import data_dir as direc
+import util as UT 
+from data import Data
 from fortran import Fcode
-from corrdata import CorrData 
 
 
 class Fft(object): 
-    def __init__(self, DorR, cat_corr, **kwargs): 
-        """ A class that describes the FFT of galaxy simulated/observed data 
-        """
-        if 'spec' not in cat_corr.keys(): 
-            # default spectrum parameters
-            cat_corr['spec'] = {
+    def __init__(self, catinfo): 
+        ''' class object for the FFT of a given catinfo dictionary 
+        '''
+        self.catinfo = data_obj.catinfo.copy() 
+        if 'spec' not in self.catinfo.keys(): 
+            # default pk/bk parameters
+            self.catinfo['spec'] = {
                     'P0': 20000, #P0 
                     'Lbox': 3600, 
                     'Ngrid':360, 
-                    'ell': 0 
-                    }
+                    'ell': 0}
 
-        self.cat_corr = cat_corr.copy()
-        self.kwargs = kwargs
-        self.type = DorR
-
-        if self.type == 'data': 
-            self.galdata = CorrData(self.cat_corr, **self.kwargs)  # data class 
-        elif self.type == 'random': 
-            self.galdata = Random(self.cat_corr, **self.kwargs)  # data class 
-        
+        self.data_obj = Data(catinfo)
+        self.data_file = self.data_obj.file_name # data file name 
         self.file_name = self.file()
 
     def file(self): 
-        """ FFT data file name 
-        """
-        #corrdict = (self.cat_corr)['correction']
-        specdict = (self.cat_corr)['spec'] 
-    
-        fft_dir = direc('fft', self.cat_corr)
-        
-        self.data_file = self.galdata.file_name # galaxy data file
+        ''' FFT data file name 
+        '''
+        # spectrum specifiers 
+        specdict = self.catinfo['spec'] 
+        str_spec = ''.join(['.grid', str(specdict['Ngrid']), '.P0', str(specdict['P0']), '.box', str(int(specdict['Lbox']))])
 
         # FFT label 
-        fft_str = 'FFT_'
+        str_fft = 'FFT_'
         if specdict['ell'] != 0: 
-            fft_str += 'Q_'
-    
-        #if (corrdict['name'].lower() in ('floriansn', 'hectorsn')) & (self.type != 'random'):
-        #    fft_corr_str = ''.join(['.', corrdict['name'].lower()])
+            str_fft += 'Q_'
 
         # FFTs from data file 
-        fft_file = ''.join([
-            fft_dir, 
-            fft_str, (self.data_file).rsplit('/')[-1], 
-            '.grid', str(specdict['Ngrid']), 
-            '.P0', str(specdict['P0']), 
-            '.box', str(int(specdict['Lbox']))
-            ])
-
+        fft_file = ''.join([UT.data_dir('fft', self.data_obj.catalog), 
+            str_fft, (self.data_file).rsplit('/')[-1], str_spec])
         return fft_file  
 
     def build(self): 
-        """ Run FFT FORTRAN code to calculate FFT of data
-        """
-        specdict = (self.cat_corr)['spec'] 
-        
-        if not os.path.isfile(self.data_file):
-            self.galdata.build()
+        ''' Run FFT FORTRAN code to calculate FFT of data
+        '''
+        specdict = self.catinfo['spec'] 
 
-        #if 'quad' not in specdict.keys(): 
-        #    raise KeyError(" 'quad' must be specified ") 
-        #if not specdict['quad']:       # quadrupole or regular FFT code
-        #    fft_type = 'fft'
-        #else:  
-        #    fft_type = 'quad_fft'
-    
-        #if specdict['ell'] == 0: 
+        if not os.path.isfile(self.data_file):
+            # if the data doesn't exist, build data first        
+            print('data file does not exist!')
+            self.data_obj.build()
         fft_type = 'fft'
-        #else: 
-        #    fft_type = 'quad_fft'       # (outdated naming convention but too lazy to fully change)
 
         codeclass = Fcode(fft_type, self.cat_corr) 
         fftcode = codeclass.code

@@ -8,17 +8,10 @@ import warnings
 from data import Data
 
 class CorrData(Data): 
-    def __init__(self, cat_corr, **kwargs): 
-        '''
-        Child class of Data describing CORRECTED galaxy catalog of 
+    def __init__(self, catinfo, **kwargs): 
+        ''' Child class of Data describing CORRECTED galaxy catalog of 
         simulations or BOSS data. Corresponds to an ASCII file with 
         galaxy catalog.
-
-        Parameters
-        ----------
-        cat_corr :  
-            Catalog correction Dictionary 
-        
         '''
         # correction class dictionary 
         try: 
@@ -30,14 +23,14 @@ class CorrData(Data):
             corr_name = cat_corr['correction']['name']
 
             if corr_name in self.corrclass_dict.keys():
-                self.corrclass = self.corrclass_dict[corr_name](cat_corr, **kwargs)
+                self.corrclass = self.corrclass_dict[corr_name](catinfo, **kwargs)
             else: 
                 raise ValueError
         else: 
             pass
             #raise NotImplementedError 
 
-        super(CorrData, self).__init__(cat_corr, **kwargs)
+        super(CorrData, self).__init__(catinfo, **kwargs)
         self.file_name = self.file()
         
     def build(self): 
