@@ -2,3 +2,4 @@
 fortran/*
 *.pyc
 *.exe
+run/*
